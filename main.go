@@ -2,59 +2,92 @@ package main
 
 import (
 	"cli/client"
-	"cli/client/home"
+	"cli/client/application"
 	"fmt"
 	"log"
 	"os"
 	"sort"
+	"strconv"
 
+	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
 	"github.com/urfave/cli/v2"
 )
 
+var (
+	transport *httptransport.Runtime
+	api       *client.Deplyf
+	auth      runtime.ClientAuthInfoWriter
+)
+
 func main() {
-
-	transport := httptransport.New("localhost:5002", "", nil)
-	apiclient := client.New(transport, strfmt.Default)
-	r, e := apiclient.Home.GetHealth(home.NewGetHealthParams())
-
-	if e != nil {
-		fmt.Println("error:", e)
-		return
-	}
-
-	fmt.Println(r)
-
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:  "lang, l",
-				Value: "english",
-				Usage: "Language for the greeting",
+				Name:     "token, t",
+				Usage:    "Personal Access Token for access to api",
+				EnvVars:  []string{"DF_API_TOKEN"},
+				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "config, c",
-				Usage: "Load configuration from `FILE`",
+				Name:    "host",
+				Usage:   "Api host",
+				Value:   "api.deploy-f.com",
+				EnvVars: []string{"DF_HOST"},
 			},
 		},
 		Commands: []*cli.Command{
 			{
-				Name:    "complete",
-				Aliases: []string{"c"},
-				Usage:   "complete a task on the list",
-				Action:  complete,
+				Name:    "set-image",
+				Aliases: []string{"si"},
+				Usage:   "Set an image to application",
+				Action:  setImage,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "app-id, a",
+						Usage:    "Application id",
+						EnvVars:  []string{"DF_APP_ID"},
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "image, i",
+						Usage:    "Docker image",
+						Required: true,
+					},
+				},
 			},
 			{
-				Name:    "add",
-				Aliases: []string{"a"},
-				Usage:   "add a task to the list",
-				Action: func(c *cli.Context) error {
-					return nil
+				Name:    "start",
+				Aliases: []string{"s"},
+				Usage:   "Start or restart application",
+				Action:  start,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "app-id, a",
+						Usage:    "Application id",
+						EnvVars:  []string{"DF_APP_ID"},
+						Required: true,
+					},
+				},
+			},
+			{
+				Name:    "stop",
+				Aliases: []string{"st"},
+				Usage:   "Stop application",
+				Action:  stop,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:     "app-id, a",
+						Usage:    "Application id",
+						EnvVars:  []string{"DF_APP_ID"},
+						Required: true,
+					},
 				},
 			},
 		},
+		Before: initApp,
 	}
 
 	sort.Sort(cli.FlagsByName(app.Flags))
@@ -66,7 +99,47 @@ func main() {
 	}
 }
 
-func complete(c *cli.Context) error {
-	fmt.Printf("complete\n")
+func setImage(c *cli.Context) error {
+	return fmt.Errorf("Not implemented")
+}
+
+func start(c *cli.Context) error {
+	id, _ := strconv.Atoi(c.String("app-id"))
+
+	params := application.NewStartParams()
+	params.ID = int32(id)
+
+	_, err := api.Application.Start(params, auth)
+
+	if err != nil {
+		return fmt.Errorf("error: %v", err)
+	}
+
+	fmt.Println("OK")
+
+	return nil
+}
+
+func stop(c *cli.Context) error {
+	id, _ := strconv.Atoi(c.String("app-id"))
+
+	params := application.NewStopParams()
+	params.ID = int32(id)
+
+	_, err := api.Application.Stop(params, auth)
+
+	if err != nil {
+		return fmt.Errorf("error: %v", err)
+	}
+
+	fmt.Println("OK")
+
+	return nil
+}
+
+func initApp(c *cli.Context) error {
+	transport = httptransport.New(c.String("host"), "", nil)
+	auth = httptransport.BearerToken(c.String("token"))
+	api = client.New(transport, strfmt.Default)
 	return nil
 }
