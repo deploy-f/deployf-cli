@@ -27,7 +27,7 @@ jobs:
         fi
 
     - name: Build
-      run: ./build-run.sh
+      run: ./build-bin.sh
     
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2
