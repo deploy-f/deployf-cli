@@ -27,9 +27,6 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
-    
-    - name: Get Version
-      run: VERSION=$(./git-semver.sh)
 
     - name: Build
       run: ./build-bin.sh
@@ -38,10 +35,11 @@ jobs:
       uses: actions/create-release@v1.1.1
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: $(./git-semver.sh)
       with:
         # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
-        tag_name: $VERSION
+        tag_name: ${{ env.VERSION }}
         # The name of the release. For example, `Release v1.0.1`
-        release_name: Release $VERSION
+        release_name: Release ${{ env.VERSION }}
         # `true` to create a draft (unpublished) release, `false` to create a published one. Default: `false`
         draft: false
