@@ -19,7 +19,8 @@ var transport *httptransport.Runtime
 
 func main() {
 	app := &cli.App{
-		Version: Version,
+		Description: "command line tool for access to deploy-f api",
+		Version:     Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "token, t",
