@@ -19,6 +19,7 @@ var transport *httptransport.Runtime
 
 func main() {
 	app := &cli.App{
+		Version: Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "token, t",
