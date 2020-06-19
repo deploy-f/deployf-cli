@@ -579,7 +579,7 @@ func (a *Client) SetCustomImage(params *SetCustomImageParams, authInfo runtime.C
 		ID:                 "SetCustomImage",
 		Method:             "POST",
 		PathPattern:        "/api/application/{id}/custom-image",
-		ProducesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json", "text/json", "text/plain"},
 		ConsumesMediaTypes: []string{"application/*+json", "application/json", "application/json-patch+json", "text/json"},
 		Schemes:            []string{"http"},
 		Params:             params,

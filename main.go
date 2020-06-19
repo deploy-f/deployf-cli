@@ -2,12 +2,11 @@ package main
 
 import (
 	"cli/client"
-	"cli/client/application"
-	"fmt"
+	"cli/cmd"
 	"log"
+	"net/url"
 	"os"
 	"sort"
-	"strconv"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -16,11 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var (
-	transport *httptransport.Runtime
-	api       *client.Deplyf
-	auth      runtime.ClientAuthInfoWriter
-)
+var transport *httptransport.Runtime
 
 func main() {
 	app := &cli.App{
@@ -34,7 +29,7 @@ func main() {
 			&cli.StringFlag{
 				Name:    "host",
 				Usage:   "Api host",
-				Value:   "api.deploy-f.com",
+				Value:   "https://api.deploy-f.com",
 				EnvVars: []string{"DF_HOST"},
 			},
 		},
@@ -43,7 +38,7 @@ func main() {
 				Name:    "set-image",
 				Aliases: []string{"si"},
 				Usage:   "Set an image to application",
-				Action:  setImage,
+				Action:  cmd.SetImage,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "app-id, a",
@@ -62,7 +57,7 @@ func main() {
 				Name:    "start",
 				Aliases: []string{"s"},
 				Usage:   "Start or restart application",
-				Action:  start,
+				Action:  cmd.Start,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "app-id, a",
@@ -76,7 +71,7 @@ func main() {
 				Name:    "stop",
 				Aliases: []string{"st"},
 				Usage:   "Stop application",
-				Action:  stop,
+				Action:  cmd.Stop,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "app-id, a",
@@ -99,47 +94,14 @@ func main() {
 	}
 }
 
-func setImage(c *cli.Context) error {
-	return fmt.Errorf("Not implemented")
-}
-
-func start(c *cli.Context) error {
-	id, _ := strconv.Atoi(c.String("app-id"))
-
-	params := application.NewStartParams()
-	params.ID = int32(id)
-
-	_, err := api.Application.Start(params, auth)
-
-	if err != nil {
-		return fmt.Errorf("error: %v", err)
-	}
-
-	fmt.Println("OK")
-
-	return nil
-}
-
-func stop(c *cli.Context) error {
-	id, _ := strconv.Atoi(c.String("app-id"))
-
-	params := application.NewStopParams()
-	params.ID = int32(id)
-
-	_, err := api.Application.Stop(params, auth)
-
-	if err != nil {
-		return fmt.Errorf("error: %v", err)
-	}
-
-	fmt.Println("OK")
-
-	return nil
-}
-
 func initApp(c *cli.Context) error {
-	transport = httptransport.New(c.String("host"), "", nil)
-	auth = httptransport.BearerToken(c.String("token"))
-	api = client.New(transport, strfmt.Default)
+	uri, err := url.Parse(c.String("host"))
+	if err != nil {
+		panic(err)
+	}
+	transport = httptransport.New(uri.Host, "", []string{uri.Scheme})
+	transport.Producers["application/*+json"] = runtime.JSONProducer()
+	cmd.Auth = httptransport.BearerToken(c.String("token"))
+	cmd.Api = client.New(transport, strfmt.Default)
 	return nil
 }

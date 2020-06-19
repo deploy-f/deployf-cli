@@ -27,7 +27,7 @@ type Client struct {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	GetHealth(params *GetHealthParams) (*GetHealthOK, error)
+	GetHealth(params *GetHealthParams, authInfo runtime.ClientAuthInfoWriter) (*GetHealthOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -35,7 +35,7 @@ type ClientService interface {
 /*
   GetHealth get health API
 */
-func (a *Client) GetHealth(params *GetHealthParams) (*GetHealthOK, error) {
+func (a *Client) GetHealth(params *GetHealthParams, authInfo runtime.ClientAuthInfoWriter) (*GetHealthOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
 		params = NewGetHealthParams()
@@ -50,6 +50,7 @@ func (a *Client) GetHealth(params *GetHealthParams) (*GetHealthOK, error) {
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetHealthReader{formats: a.formats},
+		AuthInfo:           authInfo,
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	})
