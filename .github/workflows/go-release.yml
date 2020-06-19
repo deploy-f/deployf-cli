@@ -27,6 +27,9 @@ jobs:
             curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
             dep ensure
         fi
+    
+    - name: Set Version
+      run: echo "::set-env name=VERSION::$(./git-semver.sh)"
 
     - name: Build
       run: ./build-bin.sh
@@ -35,7 +38,6 @@ jobs:
       uses: actions/create-release@v1.1.1
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: $(./git-semver.sh)
       with:
         # The name of the tag. This should come from the webhook payload, `github.GITHUB_REF` when a user pushes a new tag
         tag_name: ${{ env.VERSION }}
